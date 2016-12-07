@@ -5,29 +5,74 @@ using UnityEngine.VR.WSA.Input;
 
 public class GazeGestureManager : MonoBehaviour {
 
-    public GazeGestureManager Instance { get; private set; }
+    public static GazeGestureManager Instance { get; private set; }
 
+    [System.NonSerialized]
     public Vector3 _headPosition;
+    [System.NonSerialized]
     public Vector3 _viewDirection;
 
+    [Header("Cursor")]
     [SerializeField]
     private Transform _cursorTransform = null;
     [SerializeField]
     private MeshRenderer _cursorRenderer = null;
-    private bool gazing = true;
+    private bool _gazing = true;
 
     private GameObject _focusedObject;
 
+    [Header("Cannon")]
+    public GameObject _cannonPrefab = null;
+    private GameObject _cannon = null;
+    private CannonController _cannonController = null;
+    private GestureRecognizer _fireCannonGestureHandler;
+    private bool _firing = false;
+
+    [Header("Move object parameters")]
+    [SerializeField]
+    private float _moveSpeed = 1.0f;
     private GestureRecognizer _moveObjectGestureHandler;
+    private bool _moving = false;
+    private Vector3 _prevPos;
+    private Vector3 _moveDir;
+
+    [Header("Rotate object parameters")]
+    [SerializeField]
+    private float rotationSpeed = 1.0f;
+    private GestureRecognizer _rotateObjectGestureHandler;
+    private bool _rotating = false;
+    private float _yawPace = 0.0f;
+    private float _pitchPace = 0.0f;
+    private float _yaw = 0.0f;
+    private float _pitch = 0.0f;
 
     void Awake()
     {
+        Instance = this;
+
+        // Set up gesture recognizer for firing cannon
+        _fireCannonGestureHandler = new GestureRecognizer();
+        _fireCannonGestureHandler.SetRecognizableGestures(GestureSettings.Tap | GestureSettings.Hold);
+        _fireCannonGestureHandler.TappedEvent += SingleFire;
+        _fireCannonGestureHandler.HoldStartedEvent += FiringStarted;
+        _fireCannonGestureHandler.HoldCompletedEvent += FiringCompleted;
+        _fireCannonGestureHandler.HoldCanceledEvent += FiringCancelled;
+
+        // Set up gesture recognizer for moving objects around
         _moveObjectGestureHandler = new GestureRecognizer();
         _moveObjectGestureHandler.SetRecognizableGestures(GestureSettings.ManipulationTranslate);
         _moveObjectGestureHandler.ManipulationStartedEvent += MoveObjectStarted;
         _moveObjectGestureHandler.ManipulationUpdatedEvent += MoveObjectUpdated;
         _moveObjectGestureHandler.ManipulationCompletedEvent += MoveObjectCompleted;
         _moveObjectGestureHandler.ManipulationCanceledEvent += MoveObjectCanceled;
+
+        // Set up gesture handler for rotating objects
+        _rotateObjectGestureHandler = new GestureRecognizer();
+        _rotateObjectGestureHandler.SetRecognizableGestures(GestureSettings.NavigationX | GestureSettings.NavigationY);
+        _rotateObjectGestureHandler.NavigationStartedEvent += RotateObjectStarted;
+        _rotateObjectGestureHandler.NavigationUpdatedEvent += RotateObjectUpdated;
+        _rotateObjectGestureHandler.NavigationCompletedEvent += RotateObjectCompleted;
+        _rotateObjectGestureHandler.NavigationCanceledEvent += RotateObjectCanceled;
     }
 
     void Update()
@@ -37,7 +82,7 @@ public class GazeGestureManager : MonoBehaviour {
         _viewDirection = Camera.main.transform.forward;
 
         // If we're simply looking around, reposition cursor
-        if (gazing)
+        if (_gazing)
         {
             RaycastHit hitInfo;
 
@@ -52,6 +97,10 @@ public class GazeGestureManager : MonoBehaviour {
 
                 // Set the hit object as the currently focused object
                 _focusedObject = hitInfo.collider.gameObject;
+                if (_focusedObject.CompareTag("CannonChild"))
+                {
+                    _focusedObject = GameObject.FindGameObjectWithTag("Cannon");
+                }
             }
             else
             {
@@ -60,20 +109,172 @@ public class GazeGestureManager : MonoBehaviour {
                 _focusedObject = null;
             }
         }
+        else
+        {
+            _cursorRenderer.enabled = false;
+        }
+
+        if (_moving && _focusedObject.CompareTag("Cannon"))
+        {
+            _focusedObject.transform.position += _moveDir * _moveSpeed;
+        }
+
+        if (_rotating && _focusedObject.CompareTag("Cannon"))
+        {
+            _pitch = _cannonController.GetPitch() + (_pitchPace * rotationSpeed * Time.deltaTime);
+            _yaw = _cannonController.GetYaw() + (_yawPace * rotationSpeed * Time.deltaTime);
+
+            _cannonController.Aim(_pitch, _yaw);
+        }
+
+        if (_firing && _cannon != null)
+        {
+            _cannonController.Fire();
+        }
+    }
+
+    public void ActivateMoveObjectsMode()
+    {
+        _rotateObjectGestureHandler.StopCapturingGestures();
+        _fireCannonGestureHandler.StopCapturingGestures();
+        _moveObjectGestureHandler.StartCapturingGestures();
+    }
+
+    public void ActivateRotateObjectsMode()
+    {
+        _moveObjectGestureHandler.StopCapturingGestures();
+        _fireCannonGestureHandler.StopCapturingGestures();
+        _rotateObjectGestureHandler.StartCapturingGestures();
+    }
+
+    public void ActivateFiringMode()
+    {
+        _moveObjectGestureHandler.StopCapturingGestures();
+        _rotateObjectGestureHandler.StopCapturingGestures();
+        _fireCannonGestureHandler.StartCapturingGestures();
+    }
+
+    public void CreateCannon()
+    {
+        if (_cannon == null && _cannonPrefab != null)
+        {
+            _cannon = Instantiate(_cannonPrefab, _headPosition + (_viewDirection.normalized * 2), Quaternion.identity);
+            _cannonController = _cannon.GetComponent<CannonController>();
+        }
     }
 
     #region MoveObjectDelegates
     private void MoveObjectStarted(InteractionSourceKind source, Vector3 cumulativeDelta, Ray headRay)
-    { }
+    {
+        if (_gazing && _focusedObject != null)
+        {
+            _gazing = false;
+            _moving = true;
+            _prevPos = Vector3.zero;
+
+            _moveDir = cumulativeDelta - _prevPos;
+            _prevPos += _moveDir;
+        }
+    }
 
     private void MoveObjectUpdated(InteractionSourceKind source, Vector3 cumulativeDelta, Ray headRay)
-    { }
+    {
+        if (_moving && _focusedObject != null)
+        {
+            _moveDir = cumulativeDelta - _prevPos;
+            _prevPos += _moveDir;
+        }
+    }
 
     private void MoveObjectCompleted(InteractionSourceKind source, Vector3 cumulativeDelta, Ray headRay)
-    { }
+    {
+        _moving = false;
+        _gazing = true;
+
+        _moveDir = Vector3.zero;
+        _prevPos = Vector3.zero;
+    }
 
     private void MoveObjectCanceled(InteractionSourceKind source, Vector3 cumulativeDelta, Ray headRay)
-    { }
+    {
+        _moving = false;
+        _gazing = true;
+
+        _moveDir = Vector3.zero;
+        _prevPos = Vector3.zero;
+    }
+    #endregion
+
+    #region RotateObjectDelegates
+    private void RotateObjectStarted(InteractionSourceKind source, Vector3 normalizedOffset, Ray headRay)
+    {
+        if (_gazing && _focusedObject != null)
+        {
+            _gazing = false;
+            _rotating = true;
+
+            _yawPace = -normalizedOffset.x;
+            _pitchPace = normalizedOffset.y;
+        }
+    }
+
+    private void RotateObjectUpdated(InteractionSourceKind source, Vector3 normalizedOffset, Ray headRay)
+    {
+        if (_rotating && _focusedObject != null)
+        {
+            _moveDir = normalizedOffset - _prevPos;
+            _prevPos += _moveDir;
+
+            _yawPace = -normalizedOffset.x;
+            _pitchPace = normalizedOffset.y;
+        }
+    }
+
+    private void RotateObjectCompleted(InteractionSourceKind source, Vector3 normalizedOffset, Ray headRay)
+    {
+        _rotating = false;
+        _gazing = true;
+
+        _yawPace = 0.0f;
+        _pitchPace = 0.0f;
+    }
+
+    private void RotateObjectCanceled(InteractionSourceKind source, Vector3 normalizedOffset, Ray headRay)
+    {
+        _rotating = false;
+        _gazing = true;
+
+        _yawPace = 0.0f;
+        _pitchPace = 0.0f;
+    }
+    #endregion
+
+    #region FireCannonDelegates
+    private void SingleFire(InteractionSourceKind source, int tapCount, Ray headRay)
+    {
+        _cannonController.Fire();
+    }
+
+    private void FiringStarted(InteractionSourceKind source, Ray headRay)
+    {
+        if (_gazing)
+        {
+            _gazing = false;
+            _firing = true;
+        }
+    }
+
+    private void FiringCompleted(InteractionSourceKind source, Ray headRay)
+    {
+        _gazing = true;
+        _firing = false;
+    }
+
+    private void FiringCancelled(InteractionSourceKind source, Ray headRay)
+    {
+        _gazing = true;
+        _firing = false;
+    }
     #endregion
 
     private GazeGestureManager() { }
