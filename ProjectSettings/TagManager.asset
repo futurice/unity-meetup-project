@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Cannon
   - CannonChild
+  - Target
   layers:
   - Default
   - TransparentFX

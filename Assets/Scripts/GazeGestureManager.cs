@@ -31,6 +31,10 @@ public class GazeGestureManager : MonoBehaviour
     private CannonController            _cannonController               = null;
     private GestureRecognizer           _fireCannonGestureHandler       = null;
 
+	[Header("Target")]
+	public GameObject 					_targetPrefab 					= null;
+	public Transform					_targetContainer				= null;
+
     [Header("Move object parameters")]
     [SerializeField]
     private float                       _moveSpeed                      = 2.0f;
@@ -181,6 +185,14 @@ public class GazeGestureManager : MonoBehaviour
         }
     }
 
+	public void CreateTarget()
+	{
+		if (_targetContainer != null && _targetPrefab != null)
+		{
+			Instantiate(_targetPrefab, _headPosition + (_viewDirection.normalized * 2), Quaternion.identity, _targetContainer);
+		}
+	}
+
     public void Fire()
     {
         if (_cannonController != null)
@@ -196,7 +208,16 @@ public class GazeGestureManager : MonoBehaviour
         _cannon = null;
         _cannonController = null;
 
+		// Destroy cannon
         Destroy(temp);
+
+		// Destroy targets
+		int childCount = _targetContainer.childCount;
+
+		for (int i = 0; i < childCount; ++i)
+		{
+			Destroy(_targetContainer.GetChild (0).gameObject);
+		}
     }
     #endregion
 
@@ -204,7 +225,7 @@ public class GazeGestureManager : MonoBehaviour
     private void MoveObjectStarted(InteractionSourceKind source, Vector3 cumulativeDelta, Ray headRay)
     {
         // At the moment we only want to move the cannon
-        if (_gazing && _focusedObject != null && _focusedObject.CompareTag("Cannon"))
+		if (_gazing && _focusedObject != null && (_focusedObject.CompareTag("Cannon") || _focusedObject.CompareTag("Target")))
         {
             _gazing = false;
             _moving = true;
@@ -217,7 +238,7 @@ public class GazeGestureManager : MonoBehaviour
 
     private void MoveObjectUpdated(InteractionSourceKind source, Vector3 cumulativeDelta, Ray headRay)
     {
-        if (_moving && _focusedObject != null && _focusedObject.CompareTag("Cannon"))
+		if (_moving && _focusedObject != null && (_focusedObject.CompareTag("Cannon") || _focusedObject.CompareTag("Target")))
         {
             _moveDir = cumulativeDelta - _prevPos;
             _prevPos += _moveDir;
@@ -244,10 +265,11 @@ public class GazeGestureManager : MonoBehaviour
     #endregion
 
     #region RotateObjectDelegates
+
     private void RotateObjectStarted(InteractionSourceKind source, Vector3 normalizedOffset, Ray headRay)
     {
         // At the moment we only want to rotate the cannon
-        if (_gazing && _focusedObject != null && _focusedObject.CompareTag("Cannon"))
+		if (_gazing && _focusedObject != null && (_focusedObject.CompareTag("Cannon") || _focusedObject.CompareTag("Target")))
         {
             _gazing = false;
             _rotating = true;
@@ -259,7 +281,7 @@ public class GazeGestureManager : MonoBehaviour
 
     private void RotateObjectUpdated(InteractionSourceKind source, Vector3 normalizedOffset, Ray headRay)
     {
-        if (_rotating && _focusedObject != null && _focusedObject.CompareTag("Cannon"))
+		if (_rotating && _focusedObject != null && (_focusedObject.CompareTag("Cannon") || _focusedObject.CompareTag("Target")))
         {
             _moveDir = normalizedOffset - _prevPos;
             _prevPos += _moveDir;

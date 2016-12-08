@@ -22,6 +22,7 @@ public class SpeechManager : MonoBehaviour
         _keywords.Add("Activate firing", GazeGestureManager.Instance.ActivateFiringMode);
 		_keywords.Add("Fire", GazeGestureManager.Instance.Fire);
         _keywords.Add("Reset world", GazeGestureManager.Instance.ResetWorld);
+		_keywords.Add("Create target", GazeGestureManager.Instance.CreateTarget);
 
         _keywordRecognizer = new KeywordRecognizer(_keywords.Keys.ToArray());
         _keywordRecognizer.OnPhraseRecognized += OnPhraseRecognized;

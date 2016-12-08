@@ -359,6 +359,9 @@ MonoBehaviour:
   _cursorRenderer: {fileID: 1471078643}
   _cannonPrefab: {fileID: 1131633861330602, guid: c99b4bc5934ff8e4e9e0d23660ff2298,
     type: 2}
+  _targetPrefab: {fileID: 1327907404080820, guid: 7f9bbb6600c5d0a41815e2c5b122e272,
+    type: 2}
+  _targetContainer: {fileID: 1401444962}
   _moveSpeed: 2
   _rotationSpeed: 20
 --- !u!114 &1292494195
@@ -372,6 +375,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a1e4b5b9705aac4a94699a1e9130612, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &1401444961
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 1401444962}
+  m_Layer: 0
+  m_Name: TargetContainer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1401444962
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1401444961}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1471078642
 GameObject:
   m_ObjectHideFlags: 0
