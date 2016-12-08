@@ -141,6 +141,11 @@ public class GazeGestureManager : MonoBehaviour
         _rotateObjectGestureHandler.StopCapturingGestures();
         _fireCannonGestureHandler.StopCapturingGestures();
         _moveObjectGestureHandler.StartCapturingGestures();
+
+        if (_cannonController != null)
+        {
+            _cannonController.SetMoveMode();
+        }
     }
 
     public void ActivateRotateObjectsMode()
@@ -148,6 +153,11 @@ public class GazeGestureManager : MonoBehaviour
         _moveObjectGestureHandler.StopCapturingGestures();
         _fireCannonGestureHandler.StopCapturingGestures();
         _rotateObjectGestureHandler.StartCapturingGestures();
+
+        if (_cannonController != null)
+        {
+            _cannonController.SetRotateMode();
+        }
     }
 
     public void ActivateFiringMode()
@@ -157,7 +167,7 @@ public class GazeGestureManager : MonoBehaviour
         _fireCannonGestureHandler.StartCapturingGestures();
 
 		if (_cannonController != null) {
-			_cannonController.Ignite();
+            _cannonController.SetFiringMode();
 		}
     }
     #endregion

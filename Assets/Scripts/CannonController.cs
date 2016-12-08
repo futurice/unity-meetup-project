@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class CannonController : MonoBehaviour
 {
@@ -27,6 +28,14 @@ public class CannonController : MonoBehaviour
     [SerializeField]
     private float               _reloadTime                         = 1.0f;
 
+    [Header("UI")]
+    [SerializeField]
+    private Image               _chargeMeter                        = null;
+    [SerializeField]
+    private GameObject          _moveArrowsContainer                = null;
+    [SerializeField]
+    private GameObject          _rotateArrow                        = null;
+
     [Header("Effects")]
 	[SerializeField]
 	private ParticleSystem      _fireParticleSystem                 = null;
@@ -35,6 +44,22 @@ public class CannonController : MonoBehaviour
 	[SerializeField]
 	private AudioSource         _fireSound                          = null;
 
+    void Awake()
+    {
+        if (_chargeMeter != null)
+        {
+            _chargeMeter.fillAmount = 0.0f;
+        }
+        if (_moveArrowsContainer != null)
+        {
+            _moveArrowsContainer.SetActive(false);
+        }
+        if (_rotateArrow != null)
+        {
+            _rotateArrow.SetActive(false);
+        }
+    }
+
 
     void Update()
     {
@@ -42,6 +67,7 @@ public class CannonController : MonoBehaviour
         {
             _chargedVelocity += _chargeRate * Time.deltaTime;
             _chargedVelocity = Mathf.Min(_chargedVelocity, _maxVelocity);
+            _chargeMeter.fillAmount = (_chargedVelocity - _minimumVelocity) / (_maxVelocity - _minimumVelocity);
         }
     }
 
@@ -75,14 +101,10 @@ public class CannonController : MonoBehaviour
 
             // Cooldown
             _charging = false;
+            _chargeMeter.fillAmount = 0.0f;
             StartCoroutine(Cooldown());
         }
     }
-
-	public void Ignite()
-	{
-		_igniteParticleSystemContainer.SetActive(true);
-	}
 
     public float GetPitch()
     {
@@ -101,4 +123,28 @@ public class CannonController : MonoBehaviour
 		_onCooldown = false;
 		_fireParticleSystem.Stop (true, ParticleSystemStopBehavior.StopEmittingAndClear);
 	}
+
+    public void SetMoveMode()
+    {
+        _chargeMeter.enabled = false;
+        _igniteParticleSystemContainer.SetActive(false);
+        _rotateArrow.SetActive(false);
+        _moveArrowsContainer.SetActive(true);
+    }
+
+    public void SetRotateMode()
+    {
+        _chargeMeter.enabled = false;
+        _igniteParticleSystemContainer.SetActive(false);
+        _moveArrowsContainer.SetActive(false);
+        _rotateArrow.SetActive(true);
+    }
+
+    public void SetFiringMode()
+    {
+        _rotateArrow.SetActive(false);
+        _moveArrowsContainer.SetActive(false);
+        _chargeMeter.enabled = true;
+        _igniteParticleSystemContainer.SetActive(true);
+    }
 }
