@@ -26,7 +26,6 @@ public class GazeGestureManager : MonoBehaviour {
     private GameObject _cannon = null;
     private CannonController _cannonController = null;
     private GestureRecognizer _fireCannonGestureHandler;
-    private bool _firing = false;
 
     [Header("Move object parameters")]
     [SerializeField]
@@ -125,11 +124,6 @@ public class GazeGestureManager : MonoBehaviour {
             _yaw = _cannonController.GetYaw() + (_yawPace * rotationSpeed * Time.deltaTime);
 
             _cannonController.Aim(_pitch, _yaw);
-        }
-
-        if (_firing && _cannon != null)
-        {
-            _cannonController.Fire();
         }
     }
 
@@ -260,20 +254,20 @@ public class GazeGestureManager : MonoBehaviour {
         if (_gazing)
         {
             _gazing = false;
-            _firing = true;
+            _cannonController.StartCharging();
         }
     }
 
     private void FiringCompleted(InteractionSourceKind source, Ray headRay)
     {
+        _cannonController.Fire();
         _gazing = true;
-        _firing = false;
     }
 
     private void FiringCancelled(InteractionSourceKind source, Ray headRay)
     {
+        _cannonController.Fire();
         _gazing = true;
-        _firing = false;
     }
     #endregion
 
