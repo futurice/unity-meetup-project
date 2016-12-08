@@ -14,15 +14,14 @@ public class CannonController : MonoBehaviour
     private float _ballVelocity = 20.0f;
     [SerializeField]
     private float _reloadTime = 1.0f;
-    private float _reloadTimer = 1.0f;
+	[SerializeField]
+	private ParticleSystem _fireParticleSystem = null;
+	[SerializeField]
+	private GameObject _igniteParticleSystemContainer = null;
+	[SerializeField]
+	private AudioSource _fireSound = null;
 
-    void Update()
-    {
-        if (_reloadTimer < _reloadTime)
-        {
-            _reloadTimer += Time.deltaTime;
-        }
-    }
+	private bool _onCooldown = false;
 
     public void Aim(float pitch, float yaw)
     {
@@ -34,15 +33,23 @@ public class CannonController : MonoBehaviour
 
     public void Fire()
     {
-        if (_firePoint != null && _cannonballPrefab != null && _reloadTimer >= _reloadTime)
+        if (_firePoint != null && _cannonballPrefab != null && !_onCooldown)
         {
             GameObject ball = Instantiate(_cannonballPrefab, _firePoint.position, _firePoint.rotation);
             Rigidbody rb = ball.GetComponent<Rigidbody>();
             rb.velocity = _firePoint.forward.normalized * _ballVelocity;
+			_fireParticleSystem.Emit(1);
+			_fireSound.Play();
 
-            _reloadTime = 0.0f;
+			// Cooldown
+			StartCoroutine(Cooldown());
         }
     }
+
+	public void Ignite()
+	{
+		_igniteParticleSystemContainer.SetActive(true);
+	}
 
     public float GetPitch()
     {
@@ -53,4 +60,12 @@ public class CannonController : MonoBehaviour
     {
         return _aimingTransform.eulerAngles.y;
     }
+
+	private IEnumerator Cooldown()
+	{
+		_onCooldown = true;
+		yield return new WaitForSeconds (_reloadTime);
+		_onCooldown = false;
+		_fireParticleSystem.Stop (true, ParticleSystemStopBehavior.StopEmittingAndClear);
+	}
 }
