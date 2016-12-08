@@ -4,32 +4,37 @@ using UnityEngine;
 
 public class CannonController : MonoBehaviour
 {
+    [Header("Cannon controls")]
     [SerializeField]
-    private Transform _aimingTransform = null;
+    private Transform           _aimingTransform                    = null;
     [SerializeField]
-    private Transform _firePoint = null;
-    [SerializeField]
-    private GameObject _cannonballPrefab = null;
-    [SerializeField]
-    private float _minimumVelocity = 1.0f;
-    [SerializeField]
-    private float _maxVelocity = 15.0f;
-    [SerializeField]
-    private float _chargeRate = 2.0f;
-    [SerializeField]
-    private float _defaultBallVelocity = 5.0f;
-    private float _chargedVelocity = 0.0f;
-    private bool _charging = false;
-    [SerializeField]
-    private float _reloadTime = 1.0f;
-	[SerializeField]
-	private ParticleSystem _fireParticleSystem = null;
-	[SerializeField]
-	private GameObject _igniteParticleSystemContainer = null;
-	[SerializeField]
-	private AudioSource _fireSound = null;
+    private Transform           _firePoint                          = null;
 
-	private bool _onCooldown = false;
+    [Header("Cannonball and firing")]
+    [SerializeField]
+    private GameObject          _cannonballPrefab                   = null;
+    [SerializeField]
+    private float               _minimumVelocity                    = 1.0f;
+    [SerializeField]
+    private float               _maxVelocity                        = 15.0f;
+    [SerializeField]
+    private float               _chargeRate                         = 2.0f;
+    [SerializeField]
+    private float               _defaultBallVelocity                = 5.0f;
+    private float               _chargedVelocity                    = 0.0f;
+    private bool                _charging                           = false;
+    private bool                _onCooldown                         = false;
+    [SerializeField]
+    private float               _reloadTime                         = 1.0f;
+
+    [Header("Effects")]
+	[SerializeField]
+	private ParticleSystem      _fireParticleSystem                 = null;
+	[SerializeField]
+	private GameObject          _igniteParticleSystemContainer      = null;
+	[SerializeField]
+	private AudioSource         _fireSound                          = null;
+
 
     void Update()
     {
@@ -63,13 +68,14 @@ public class CannonController : MonoBehaviour
         {
             GameObject ball = Instantiate(_cannonballPrefab, _firePoint.position, _firePoint.rotation);
             Rigidbody rb = ball.GetComponent<Rigidbody>();
+
             rb.velocity = _firePoint.forward.normalized * (_charging ? _chargedVelocity : _defaultBallVelocity);
 			_fireParticleSystem.Emit(1);
 			_fireSound.Play();
-            _charging = false;
 
-			// Cooldown
-			StartCoroutine(Cooldown());
+            // Cooldown
+            _charging = false;
+            StartCoroutine(Cooldown());
         }
     }
 

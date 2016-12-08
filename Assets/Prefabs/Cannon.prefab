@@ -436,7 +436,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 2
       time: 0
-      value: 0
+      value: 1
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -454,7 +454,7 @@ AudioSource:
       tangentMode: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
-    m_RotationOrder: 4
+    m_RotationOrder: 0
   reverbZoneMixCustomCurve:
     serializedVersion: 2
     m_Curve:
@@ -482,7 +482,10 @@ MonoBehaviour:
   _firePoint: {fileID: 4177339325641106}
   _cannonballPrefab: {fileID: 1072006519797030, guid: 9dd3ac3a061463b4e8b161b3529aeaba,
     type: 2}
-  _ballVelocity: 5
+  _minimumVelocity: 1
+  _maxVelocity: 15
+  _chargeRate: 2
+  _defaultBallVelocity: 5
   _reloadTime: 1
   _fireParticleSystem: {fileID: 198291092760728284}
   _igniteParticleSystemContainer: {fileID: 1580983215196664}
@@ -542,7 +545,7 @@ ParticleSystem:
   moveWithTransform: 1
   moveWithCustomTransform: {fileID: 0}
   scalingMode: 2
-  randomSeed: -461005905
+  randomSeed: 1735422931
   InitialModule:
     serializedVersion: 3
     enabled: 1
@@ -3089,7 +3092,7 @@ ParticleSystem:
   moveWithTransform: 1
   moveWithCustomTransform: {fileID: 0}
   scalingMode: 2
-  randomSeed: 1677473514
+  randomSeed: -356885238
   InitialModule:
     serializedVersion: 3
     enabled: 1
