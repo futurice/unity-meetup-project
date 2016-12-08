@@ -188,6 +188,16 @@ public class GazeGestureManager : MonoBehaviour
             _cannonController.Fire();
         }
     }
+
+    public void ResetWorld()
+    {
+        GameObject temp = _cannon;
+
+        _cannon = null;
+        _cannonController = null;
+
+        Destroy(temp);
+    }
     #endregion
 
     #region MoveObjectDelegates
