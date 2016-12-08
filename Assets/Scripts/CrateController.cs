@@ -9,6 +9,11 @@ public class CrateController : MonoBehaviour
 
 	public TargetController TargetController
 	{
+        get
+        {
+            return _targetController;
+        }
+
 		set
 		{
 			_targetController = value;

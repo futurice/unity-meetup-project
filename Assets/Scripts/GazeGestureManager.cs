@@ -108,7 +108,11 @@ public class GazeGestureManager : MonoBehaviour
                 // Special check for if the object is the cannon, since the colliders are on the base and the barrel and we want to target the cannon as a whole
                 if (_focusedObject.CompareTag("CannonChild"))
                 {
-                    _focusedObject = GameObject.FindGameObjectWithTag("Cannon");
+                    _focusedObject = _focusedObject.GetComponentInParent<CannonController>().gameObject;
+                }
+                else if (_focusedObject.CompareTag("Target"))
+                {
+                    _focusedObject = _focusedObject.transform.parent.gameObject;
                 }
             }
             else
@@ -126,15 +130,24 @@ public class GazeGestureManager : MonoBehaviour
         
         if (_moving)
         {
+            
             _focusedObject.transform.position += _moveDir * _moveSpeed;
         }
         
         if (_rotating)
         {
-            _pitch = _cannonController.GetPitch() + (_pitchPace * _rotationSpeed * Time.deltaTime);
-            _yaw = _cannonController.GetYaw() + (_yawPace * _rotationSpeed * Time.deltaTime);
+            if (_focusedObject.CompareTag("Cannon"))
+            {
+                _pitch = _cannonController.GetPitch() + (_pitchPace * _rotationSpeed * Time.deltaTime);
+                _yaw = _cannonController.GetYaw() + (_yawPace * _rotationSpeed * Time.deltaTime);
 
-            _cannonController.Aim(_pitch, _yaw);
+                _cannonController.Aim(_pitch, _yaw);
+            }
+            else
+            {
+                Transform targetContainer = _focusedObject.transform;
+                targetContainer.eulerAngles = new Vector3(0.0f, targetContainer.eulerAngles.y + _yawPace * Time.deltaTime, 0.0f);
+            }
         }
     }
 
