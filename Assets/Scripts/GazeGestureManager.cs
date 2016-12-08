@@ -3,9 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.VR.WSA.Input;
 
-public class GazeGestureManager : MonoBehaviour {
-
-    public static GazeGestureManager Instance { get; private set; }
+public class GazeGestureManager : MonoBehaviour
+{
+    public static GazeGestureManager Instance
+    {
+        get;
+        private set;
+    }
 
     [System.NonSerialized]
     public Vector3 _headPosition;
@@ -146,7 +150,18 @@ public class GazeGestureManager : MonoBehaviour {
         _moveObjectGestureHandler.StopCapturingGestures();
         _rotateObjectGestureHandler.StopCapturingGestures();
         _fireCannonGestureHandler.StartCapturingGestures();
+
+		if (_cannonController != null) {
+			_cannonController.Ignite();
+		}
     }
+
+	public void Fire()
+	{
+		if (_cannonController != null) {
+			_cannonController.Fire();
+		}
+	}
 
     public void CreateCannon()
     {

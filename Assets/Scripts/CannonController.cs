@@ -22,17 +22,18 @@ public class CannonController : MonoBehaviour
     private bool _charging = false;
     [SerializeField]
     private float _reloadTime = 1.0f;
-    private float _cooldown = 0.0f;
-    private bool _loaded = true;
+	[SerializeField]
+	private ParticleSystem _fireParticleSystem = null;
+	[SerializeField]
+	private GameObject _igniteParticleSystemContainer = null;
+	[SerializeField]
+	private AudioSource _fireSound = null;
+
+	private bool _onCooldown = false;
 
     void Update()
     {
-        if (!_loaded)
-        {
-            _cooldown -= Time.deltaTime;
-            _loaded = _cooldown <= 0;
-        }
-        else if (_charging)
+        if (!_onCooldown && _charging)
         {
             _chargedVelocity += _chargeRate * Time.deltaTime;
             _chargedVelocity = Mathf.Min(_chargedVelocity, _maxVelocity);
@@ -49,7 +50,7 @@ public class CannonController : MonoBehaviour
 
     public void StartCharging()
     {
-        if (_loaded && !_charging)
+        if (!_onCooldown && !_charging)
         {
             _charging = true;
             _chargedVelocity = _minimumVelocity;
@@ -58,17 +59,24 @@ public class CannonController : MonoBehaviour
 
     public void Fire()
     {
-        if (_firePoint != null && _cannonballPrefab != null && _loaded)
+        if (_firePoint != null && _cannonballPrefab != null && !_onCooldown)
         {
             GameObject ball = Instantiate(_cannonballPrefab, _firePoint.position, _firePoint.rotation);
             Rigidbody rb = ball.GetComponent<Rigidbody>();
             rb.velocity = _firePoint.forward.normalized * (_charging ? _chargedVelocity : _defaultBallVelocity);
-
-            _cooldown = _reloadTime;
+			_fireParticleSystem.Emit(1);
+			_fireSound.Play();
             _charging = false;
-            _loaded = false;
+
+			// Cooldown
+			StartCoroutine(Cooldown());
         }
     }
+
+	public void Ignite()
+	{
+		_igniteParticleSystemContainer.SetActive(true);
+	}
 
     public float GetPitch()
     {
@@ -79,4 +87,12 @@ public class CannonController : MonoBehaviour
     {
         return _aimingTransform.eulerAngles.y;
     }
+
+	private IEnumerator Cooldown()
+	{
+		_onCooldown = true;
+		yield return new WaitForSeconds (_reloadTime);
+		_onCooldown = false;
+		_fireParticleSystem.Stop (true, ParticleSystemStopBehavior.StopEmittingAndClear);
+	}
 }
